@@ -28,26 +28,27 @@ Swarm resolves these challenges directly at the runtime layer through **state-is
 
 ```mermaid
 flowchart TD
-    Client["Client Request / Webhook"] --> API["FastAPI Gateway"]
-    API --> Agent["SwarmAgent Runtime Coordinator"]
+    Client["Client Request or Webhook"] --> API["FastAPI Gateway"]
+    API --> Agent["SwarmAgent Coordinator"]
     
     subgraph ExecutionEngine ["Execution Engine"]
-        Agent --> Planner["Task Planner & DAG Decomposer"]
+        Agent --> Planner["Task Planner and DAG Decomposer"]
         Planner --> DAG["Execution DAG"]
         DAG --> Executor["Async Concurrency Executor"]
         Executor --> Tools["Tool Registry"]
         
-        Executor -.->|Failure Detection| Recovery["Multi-Tier Recovery Engine"]
+        Executor -.->|Failure Intercept| Recovery["Multi-Tier Recovery Engine"]
         Recovery -->|Tier 1: Jittered Backoff| Tools
         Recovery -->|Tier 2: Fallback Service| Tools
-        Recovery -->|Tier 3: In-Flight Replan| Planner
+        Recovery -->|Tier 3: Dynamic Replan| Planner
     end
 
-    subgraph StateAndCost ["State Persistence & Cost Optimization"]
-        Executor -->|Atomic Pipeline Writes (<1ms)| Redis[("Redis Checkpoint Store")]
+    subgraph StateAndCost ["State Persistence and Cost Optimization"]
+        Executor -->|Sub-millisecond Pipeline Writes| Redis[("Redis Checkpoint Store")]
         Agent -.->|Resume Interrupted Run| Redis
-        Planner & Executor <--> Cache["Prefix Prompt Cache (-43% Tokens)"]
-        Cache <--> LLM["LLM Provider (OpenAI / Mock)"]
+        Planner --> Cache["Prefix Prompt Cache: 43% Token Cut"]
+        Executor --> Cache
+        Cache <--> LLM["LLM Provider: OpenAI or Mock"]
     end
 
     API -->|SSE Stream /events| Client
@@ -242,30 +243,6 @@ Accept: text/event-stream
 ### Telemetry & Token Savings
 ```http
 GET /metrics
-```
-
----
-
-## Repository Structure
-
-```
-swarm/
-├── swarm/
-│   ├── api/                  # FastAPI endpoints, schemas, SSE event streams
-│   ├── runtime/              # Agent orchestrator, planner, executor, recovery engine
-│   ├── checkpoint/           # Redis-backed durable checkpoint manager
-│   ├── cache/                # Prefix prompt caching engine (-43% token spend cut)
-│   ├── tools/                # Extensible tool registry (calculator, search, sandbox, memory)
-│   ├── llm/                  # Async OpenAI client with deterministic mock fallback
-│   ├── evals/                # 40-task benchmark evaluation harness and reporter
-│   ├── config.py             # Application settings & environment variables
-│   └── main.py               # CLI entrypoint & server factory
-├── tests/                    # Unit and integration test suite
-├── benchmarks/               # Automated validation scripts for token cut and durability
-├── Dockerfile                # Production container specification
-├── docker-compose.yml        # Docker compose specification (API + Redis)
-├── pyproject.toml            # Package configuration
-└── README.md                 # Technical documentation
 ```
 
 ---
