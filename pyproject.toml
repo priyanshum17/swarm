@@ -1,0 +1,41 @@
+[project]
+name = "swarm"
+version = "0.1.0"
+description = "A fast, resilient agent runtime with Redis-backed durable execution, prompt caching, and multi-step recovery."
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+authors = [
+    { name = "Priyanshu Mehta", email = "pmehta305@gatech.edu" }
+]
+dependencies = [
+    "fastapi>=0.110.0",
+    "uvicorn[standard]>=0.28.0",
+    "pydantic>=2.6.0",
+    "redis>=5.0.1",
+    "httpx>=0.27.0",
+    "openai>=1.20.0",
+    "tiktoken>=0.7.0",
+    "rich>=13.7.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0.0",
+    "pytest-asyncio>=0.23.0",
+    "fakeredis>=2.21.0",
+]
+
+[project.scripts]
+swarm = "swarm.main:cli"
+
+[tool.hatch.build.targets.wheel]
+packages = ["swarm"]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
